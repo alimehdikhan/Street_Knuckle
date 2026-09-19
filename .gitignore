@@ -1,0 +1,17 @@
+# Build output
+build/
+out/
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.log
+
+# Vendored SDKs (fetch separately)
+third_party/DiligentCore/
+third_party/SDL3-3.4.16/
+
+# Editor / OS
+.vs/
+*.user
+Thumbs.db
