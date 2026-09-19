@@ -311,7 +311,7 @@ static Pose TargetPose(const Fighter &f, float t) {
         break;
     case ST_CROUCH: break;
     case ST_PREJUMP: p.hipY=0.72f;p.lean=0.25f;Plant(p,true,true);break;
-    case ST_PARRY: p.lHand={0.45f,0.15f,0.12f};p.rHand={0.38f,0.12f,-0.12f};break;
+    case ST_PARRY: case ST_PARRY_END: p.lHand={0.45f,0.15f,0.12f};p.rHand={0.38f,0.12f,-0.12f};break;
     case ST_RUSH: p.hipY=0.80f;p.lean=0.48f;p.lFoot.x=0.44f;Plant(p,true,true);break;
     case ST_TECH: p.hipY=0.46f;p.tilt=0.40f;p.lean=0.40f;Plant(p,true,true);break;
     case ST_LAND:
@@ -513,7 +513,7 @@ static void StartMove(Fighter &f, float wantYaw, int m, int skip) {
     f.enhanced=ex;f.armorHits=0;
     f.rushBonus=f.rushReady>0 && IsCancelableNormal(m)?4:0;f.rushReady=0;
     f.historyCount=0;
-    if(m==M_HEAT_BURST){f.heatAvailable=false;f.heatFrames=600;SetMsg(f,"HEAT BURST");}
+    if(m==M_HEAT_BURST){f.heatAvailable=false;f.heatFrames=f.heatDuration=600;SetMsg(f,"HEAT BURST");}
     if(m==M_HEAT_SMASH){f.heatFrames=0;SetMsg(f,"HEAT SMASH");}
     if(ex)SetMsg(f,"OVERDRIVE");
     f.yaw = wantYaw;
@@ -579,6 +579,7 @@ bool CombatOverlap(const CombatVolume &a,const CombatVolume &b) {
 // Both active strikes can trade; resolving P1 first cannot erase P2's strike.
 static bool ResolveHit(Fighter &a, Fighter &d, int moveId,
                        const Fighter &beforeA, const Fighter &beforeD, const Projectile *projectile=nullptr) {
+    if(beforeD.ko)return false;
     MoveDef mv = MOVES[moveId];
     if(beforeA.enhanced && IsSpecial(moveId)){mv.damage=mv.damage*13/10;mv.hitstun+=4;mv.blockstun+=2;}
     mv.hitstun+=beforeA.rushBonus;mv.blockstun+=beforeA.rushBonus;
@@ -595,7 +596,7 @@ static bool ResolveHit(Fighter &a, Fighter &d, int moveId,
     Vector3 rel = { beforeD.pos.x - beforeA.pos.x, 0, beforeD.pos.z - beforeA.pos.z };
     float dx = VDot(rel, fw), dz = VDot(rel, sd);
     // homing moves track through a sidestep; everything else whiffs on it
-    CombatVolume volume=projectile?CombatVolume{projectile->pos,{0.28f,0.22f,0.28f},beforeA.yaw}:AttackVolume(beforeA,moveId);
+    CombatVolume volume=projectile?CombatVolume{projectile->pos,{0.28f,PROJECTILE_HALF_HEIGHT,0.28f},beforeA.yaw}:AttackVolume(beforeA,moveId);
     if (!CombatOverlap(volume,HurtVolume(beforeD))) return false;
 
     bool air = beforeD.state == ST_LAUNCH || beforeD.state == ST_JUMP || beforeD.pos.y > 0.08f;
@@ -665,7 +666,7 @@ static bool ResolveHit(Fighter &a, Fighter &d, int moveId,
     }
 
     // ---- guard ----
-    bool guarding = (beforeD.state == ST_IDLE || beforeD.state == ST_CROUCH || beforeD.state == ST_BLOCK) &&
+    bool guarding = (beforeD.state == ST_IDLE || beforeD.state == ST_CROUCH || beforeD.state == ST_BLOCK || beforeD.state==ST_PARRY_END) &&
                     d.in.back && !d.in.fwd;
     bool blocked = guarding && (mv.level==LV_SPECIAL || (mv.level == LV_LOW ? d.crouched : !d.crouched));
     if (blocked) {
@@ -714,7 +715,7 @@ static bool ResolveHit(Fighter &a, Fighter &d, int moveId,
     } else {
         if (beforeD.state == ST_IDLE || beforeD.state == ST_CROUCH || beforeD.state == ST_ATTACK ||
             beforeD.state == ST_DASH || beforeD.state == ST_SIDESTEP || beforeD.state == ST_JUMP ||
-            (beforeD.state == ST_STAGGER && !beforeD.wallSplat) || beforeD.state == ST_LAND || beforeD.state==ST_PARRY || beforeD.state==ST_RUSH || beforeD.state==ST_PREJUMP) {
+            (beforeD.state == ST_STAGGER && !beforeD.wallSplat) || beforeD.state == ST_LAND || beforeD.state==ST_PARRY || beforeD.state==ST_RUSH || beforeD.state==ST_PREJUMP || beforeD.state==ST_PARRY_END) {
             d.comboCount = 0;
             d.comboDmg = 0;
         }
@@ -753,7 +754,7 @@ static bool ResolveHit(Fighter &a, Fighter &d, int moveId,
         }
     }
     if(moveId==M_FRP && a.heatAvailable && !air && !d.ko && beforeD.state!=ST_DOWN) {
-        a.heatAvailable=false;a.heatFrames=900;
+        a.heatAvailable=false;a.heatFrames=a.heatDuration=900;
         StartRush(a,0);a.rushReady=45;d.timer=42;a.frameAdvantage=24;SetMsg(a,"HEAT ENGAGER");
     }
     SpawnSparks(sp, heavy ? Color{ 255, 170, 60, 255 } : Color{ 255, 235, 140, 255 },
@@ -893,8 +894,12 @@ static void UpdateFighter(Fighter &f, Fighter &o, const Fighter &opSnapshot, con
     case ST_PARRY:
         f.velocity={};
         if((in.rushP || in.dashF) && StartRush(f,1))break;
-        if(!in.parry || f.burnout){f.state=ST_BLOCK;f.timer=16;f.parryPerfect=0;break;}
+        if(!in.parry || f.burnout){f.state=ST_PARRY_END;f.timer=16;f.parryPerfect=0;break;}
         DrainDrive(f,0.8f*DT);break;
+    case ST_PARRY_END:
+        f.velocity={};
+        if(--f.timer<=0)f.state=ST_IDLE;
+        break;
     case ST_RUSH:
         TurnToward(f,wantYaw,0.22f);
         f.velocity=dir*(8.4f*Clampf(f.timer/6.0f,0.3f,1.0f));
@@ -944,7 +949,7 @@ static void UpdateFighter(Fighter &f, Fighter &o, const Fighter &opSnapshot, con
         if(mv.homing && f.moveFrame<=mv.startup)TurnToward(f,wantYaw,0.18f);
         if(f.move==M_WAVE && f.moveFrame==mv.startup+1) {
             bool exists=false;for(const auto &p:G.projectiles)exists|=p.owner==f.id && p.life>0;
-            if(!exists)G.projectiles.push_back({f.pos+Fwd(f)*0.55f+Vector3{0,0.88f,0},Fwd(f)*(f.enhanced?12.0f:9.0f),f.id,f.serial,105,f.enhanced});
+            if(!exists)G.projectiles.push_back({f.pos+Fwd(f)*0.55f+Vector3{0,PROJECTILE_HEIGHT,0},Fwd(f)*(f.enhanced?12.0f:9.0f),f.id,f.serial,105,f.enhanced});
             Play(SND_WHOOSH);
         }
         if(f.move==M_RISING && f.moveFrame==mv.startup){f.vy=6.8f;f.pos.y=0.001f;f.velocity=Fwd(f)*1.6f;}
