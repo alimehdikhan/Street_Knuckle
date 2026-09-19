@@ -106,13 +106,16 @@ void Resources(const Fighter &f,bool left){
     for(int i=0;i<6;++i){float bx=x+(left?i:5-i)*46;Rect(bx,112,42,6,{48,64,73,240});
         float fill=42*Clampf(amount-i,0,1);Rect(left?bx:bx+42-fill,112,fill,6,drive);}
     float hx=left?102:926;Rect(hx,136,204,4,{67,73,82,240});
-    float heat=f.heatFrames>0?std::min(1.0f,f.heatFrames/600.0f):f.heatAvailable?1:0;
+    float heat=f.heatFrames>0?std::min(1.0f,float(f.heatFrames)/f.heatDuration):f.heatAvailable?1:0;
     Rect(left?hx:hx+204*(1-heat),136,204*heat,4,Gold);
     char label[64];
     if(f.burnout)std::snprintf(label,sizeof(label),"BURNOUT  %.1fs",f.burnout/60.0f);
     else std::snprintf(label,sizeof(label),"DRIVE  %.1f / 6",f.drive);
-    if(left){Type(label,390,105,14,drive);Type(f.heatFrames>0?"HEAT ACTIVE":f.heatAvailable?"G  HEAT READY":"HEAT USED",102,143,14,Gold);}
-    else {Right(label,838,105,14,drive);Right(f.heatFrames>0?"HEAT ACTIVE":f.heatAvailable?"HEAT READY":"HEAT USED",1130,143,14,Gold);}
+    char heatLabel[48];
+    if(f.heatFrames>0)std::snprintf(heatLabel,sizeof(heatLabel),"HEAT  %.1fs",f.heatFrames/60.0f);
+    else std::snprintf(heatLabel,sizeof(heatLabel),"%s",f.heatAvailable?"HEAT READY":"HEAT USED");
+    if(left){Type(label,390,105,14,drive);Type(heatLabel,102,143,14,Gold);}
+    else {Right(label,838,105,14,drive);Right(heatLabel,1130,143,14,Gold);}
 }
 void FightHUD(){
     VGrad(0,0,1280,180,{6,11,18,230},{6,11,18,0});
@@ -131,7 +134,7 @@ void FightHUD(){
 }
 void Training(){
     const Fighter &f=G.f[0];const MoveDef &m=MOVES[f.move];
-    const char *state=f.state==ST_ATTACK?(f.moveFrame<=m.startup?"Startup":f.moveFrame<=m.startup+m.active?"Active":"Recovery"):f.state==ST_LAND?"Landing":f.state==ST_BLOCK?"Guarding":f.state==ST_HIT?"Hit stun":"Ready";
+    const char *state=f.state==ST_ATTACK?(f.moveFrame<=m.startup?"Startup":f.moveFrame<=m.startup+m.active?"Active":"Recovery"):f.state==ST_LAND?"Landing":f.state==ST_BLOCK?"Guarding":f.state==ST_HIT?"Hit stun":f.state==ST_PARRY?"Parrying":f.state==ST_PARRY_END?"Parry recovery":f.state==ST_RUSH?"Rushing":f.state==ST_TECH?"Tech roll":f.state==ST_PREJUMP?"Jump startup":f.state==ST_LAUNCH?"Airborne":"Ready";
     Rect(52,453,347,125,Panel);Rect(52,453,3,125,Gold);
     Type(f.move?m.name:"Move analysis",68,464,24,White);
     Type(state,68,498,17,Gold);
@@ -179,9 +182,9 @@ void Moves(){
 }
 void Systems(){
     const char *names[]={"Special move","Heat burst / smash","Drive Impact","Drive Parry","Drive Rush","Drive Reversal"};
-    const char *p1[]={"F","G","H","Hold V","B / F,F","H while blocking"};
-    const char *p2[]={"Num 0","Num 7","Num 8","Hold Num 9","Num . / F,F","Num 8 in guard"};
-    const char *pad[]={"R3","L3","RT","Hold LT","LT + F,F","RT in guard"};
+    const char *p1[]={"F","G","H","Hold V","B / 6,6","H while blocking"};
+    const char *p2[]={"Num 0","Num 7","Num 8","Hold Num 9","Num . / 6,6","Num 8 in guard"};
+    const char *pad[]={"R3","L3","RT","Hold LT","LT + 6,6","RT in guard"};
     const char *rules[]={"Hold down: uppercut. Back: spin.","Once per round. Press again to finish.","1 Drive. Absorbs two strikes.","Blocks strikes. Vulnerable to throws.","1 Drive raw. 3 Drive to cancel.","2 Drive. Escape block pressure."};
     Type("ABILITY",70,172,15,Muted,1,1);Type("PLAYER 1",320,172,15,Gold);Type("PLAYER 2",500,172,15,Ice);Type("PAD",692,172,15,Muted);
     for(int i=0;i<6;++i){float y=210+i*48;if(i%2==0)Rect(54,y-3,1172,45,{22,32,41,160});
