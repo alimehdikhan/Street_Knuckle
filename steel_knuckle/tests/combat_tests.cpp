@@ -118,8 +118,8 @@ int main() {
     setup();G.f[1].state=ST_HIT;G.f[1].timer=30;G.f[1].comboCount=4;
     G.f[0].state=ST_ATTACK;G.f[0].move=M_LP;G.f[0].moveFrame=MOVES[M_LP].startup;tick();
     check(MAX_HP-G.f[1].hp<MOVES[M_LP].damage,"grounded combos receive damage scaling");
-    setup();tick({},guard);tick();tick({},guard);
-    check(G.f[1].parryWindow<4,"rapid guard tapping cannot continually rearm parry window");
+    setup();Input parryHold;parryHold.parry=true;frames(4,{},parryHold);
+    check(G.f[1].parryPerfect==0 && G.f[1].state==ST_PARRY,"holding parry cannot extend its perfect window");
 
     setup();tick(punch());int chain=0;
     for(int n=0;n<130;++n){
@@ -172,7 +172,7 @@ int main() {
     check(G.f[1].hp==MAX_HP && G.f[1].state==ST_PARRY,"held Drive Parry defends lows after the perfect window");
     setup();frames(4,{},heldParry);activeStrike(M_THROW);tick({},heldParry);
     check(G.f[1].state==ST_THROWN,"throws beat held Drive Parry");
-    setup();frames(4,{},heldParry);tick();check(G.f[1].state==ST_BLOCK && G.f[1].timer==16,"released parry has vulnerable recovery");
+    setup();frames(4,{},heldParry);tick();check(G.f[1].state==ST_PARRY_END && G.f[1].timer==16,"released parry has vulnerable recovery");
     setup();G.f[0].state=ST_BLOCK;G.f[0].timer=18;tick(impact);
     check(G.f[0].move==M_REVERSAL && G.f[0].drive<4.01f,"Drive Reversal escapes blockstun for two stocks");
     setup();G.f[1].state=ST_ATTACK;G.f[1].move=M_RISING;G.f[1].moveFrame=1;G.f[1].enhanced=true;activeStrike(M_LP);tick();
@@ -199,15 +199,36 @@ int main() {
     setup(6);Input dashBack;dashBack.dashB=true;tick(dashBack);frames(3);tick(direction(1));
     check(G.f[0].state==ST_CROUCH,"backdash can be crouch-canceled for backdash sequences");
     setup(6);tick(jump);check(G.f[0].state==ST_PREJUMP && G.f[0].pos.y==0,"jump has grounded startup before takeoff");
-    setup(6);G.projectiles.push_back({{-0.15f,0.88f,0},{9,0,0},0,0,100,false});G.projectiles.push_back({{0.15f,0.88f,0},{-9,0,0},1,0,100,false});tick();
+    setup(6);G.projectiles.push_back({{-0.15f,PROJECTILE_HEIGHT,0},{9,0,0},0,0,100,false});G.projectiles.push_back({{0.15f,PROJECTILE_HEIGHT,0},{-9,0,0},1,0,100,false});tick();
     check(G.projectiles.empty() && G.f[0].hp==MAX_HP && G.f[1].hp==MAX_HP,"opposing projectiles clash before hitting fighters");
-    setup(6);G.f[1].pos.z=2;G.projectiles.push_back({{0,0.88f,0},{9,0,0},0,0,100,false});frames(100);
+    setup(6);G.f[1].pos.z=2;G.projectiles.push_back({{0,PROJECTILE_HEIGHT,0},{9,0,0},0,0,100,false});frames(100);
     check(G.f[1].hp==MAX_HP,"a sidestepped projectile retains its original trajectory and misses");
     setup();G.f[1].hp=1;G.f[1].burnout=300;G.f[1].drive=0;
-    G.projectiles.push_back({G.f[1].pos+Vector3{-0.15f,0.88f,0},{9,0,0},0,0,100,false});tick({},stableGuard);
+    G.projectiles.push_back({G.f[1].pos+Vector3{-0.15f,PROJECTILE_HEIGHT,0},{9,0,0},0,0,100,false});tick({},stableGuard);
     check(G.f[1].ko,"special chip can KO a burned-out defender");
     setup(6);G.paused=true;int heatClock=G.f[0].heatFrames=300;G.f[0].burnout=100;tick();
     check(G.f[0].heatFrames==heatClock && G.f[0].burnout==100,"pause freezes Heat and burnout clocks");
+    setup();frames(4,{},heldParry);tick();activeStrike(M_THROW);tick();
+    check(G.f[1].state==ST_THROWN,"a throw punishes parry release recovery");
+    setup(6);G.f[0].serial=2;activeStrike(M_LP);
+    G.projectiles.push_back({G.f[1].pos+Vector3{-0.15f,PROJECTILE_HEIGHT,0},{9,0,0},0,1,100,false});tick();
+    check(!G.f[0].moveHit && G.f[0].contact==0,"an older projectile cannot confirm an unrelated normal");
+    G.hitstop=0;tick(special);check(G.f[0].move==M_LP,"old projectile contact cannot unlock a whiff cancel");
+    setup(6);G.f[1].hp=2;Input lowGuard;lowGuard.back=lowGuard.down=true;
+    G.projectiles.push_back({G.f[1].pos+Vector3{-0.15f,PROJECTILE_HEIGHT,0},{9,0,0},0,0,100,false});tick({},lowGuard);
+    check(G.f[1].hp==1 && !G.f[1].ko && G.f[1].state==ST_BLOCK,"crouch guard blocks specials and ordinary chip cannot KO");
+    setup(6);tick({},jump);frames(13);
+    check(G.f[1].pos.y>PROJECTILE_HEIGHT+PROJECTILE_HALF_HEIGHT,"jump arc clears the full projectile volume");
+    G.projectiles.push_back({G.f[1].pos+Vector3{-0.50f,PROJECTILE_HEIGHT-G.f[1].pos.y,0},{9,0,0},0,0,100,false});frames(8);
+    check(G.f[1].hp==MAX_HP && !G.projectiles.empty(),"well-timed jumping avoids a travelling wave");
+    setup();G.f[0].pos={ARENA_R-1,0,0};G.f[1].pos={ARENA_R-0.1f,0,0};
+    G.f[1].burnout=300;G.f[1].drive=0;activeStrike(M_IMPACT);tick({},stableGuard);
+    check(G.f[1].state==ST_STAGGER && G.f[1].timer==75,"blocked corner Impact stuns a burned-out defender");
+    setup();G.f[0].heatAvailable=false;G.f[0].heatFrames=400;activeStrike(M_FRP);tick({},stableGuard);G.hitstop=0;tick(rush);
+    check(G.f[0].state==ST_RUSH && G.f[0].heatFrames==0 && G.f[0].drive==6,"Heat Dash consumes Heat without spending Drive");
+    setup(6);G.f[0].ko=true;G.f[0].hp=0;G.f[0].recoverable=20;G.f[0].state=ST_KO;
+    G.projectiles.push_back({G.f[1].pos+Vector3{-0.15f,PROJECTILE_HEIGHT,0},{9,0,0},0,0,100,false});tick();
+    check(G.f[0].hp==0 && G.f[1].hp<MAX_HP,"a KO owner's projectile can connect without reviving its owner");
     G=Game();G.mode=2;StartMatch();
     for(int n=0;n<18000;++n) {
         Input a,b;
