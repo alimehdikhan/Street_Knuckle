@@ -493,7 +493,7 @@ void SceneDrawFrame(float t, bool postFx) {
         Vector3 p=ball.pos;
         R::TransFlat(MESH_SPHERE,Mul(MatScale(0.13f,0.13f,0.13f),MatTranslate(p.x,p.y,p.z)),{240,252,255,245});
         R::CircleFacing(p,0.25f,axis,c);
-        if(G.mode==3 && G.showHitboxes)DrawCombatBox({p,{0.28f,0.22f,0.28f},0},{255,165,75,255});
+        if(G.mode==3 && G.showHitboxes)DrawCombatBox({p,{0.28f,PROJECTILE_HALF_HEIGHT,0.28f},0},{255,165,75,255});
     }
     for(const auto &f:G.f){
         bool powered=f.heatFrames>0 || f.enhanced && f.state==ST_ATTACK;
