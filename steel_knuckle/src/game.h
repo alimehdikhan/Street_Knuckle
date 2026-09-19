@@ -20,6 +20,8 @@ const int   ROUND_FRAMES  = 60 * 60;
 const int   ROUNDS_TO_WIN = 2;
 const float BODY_DIST     = 0.72f;
 const float GRAVITY       = 28.0f; // metres / second squared
+const float PROJECTILE_HEIGHT = 0.66f; // below the jump apex, with room to clear its volume
+const float PROJECTILE_HALF_HEIGHT = 0.18f;
 const float JUMP_SPEED    = 7.4f;  // metres / second
 const int   METER_MAX     = 100;
 const int   TRAIL_LEN     = 14;
@@ -91,7 +93,7 @@ struct Pose {
 
 enum State {
     ST_IDLE, ST_CROUCH, ST_DASH, ST_SIDESTEP, ST_JUMP, ST_ATTACK, ST_HIT, ST_BLOCK,
-    ST_LAUNCH, ST_DOWN, ST_GETUP, ST_THROWING, ST_THROWN, ST_KO, ST_WIN, ST_STAGGER, ST_LAND, ST_PARRY, ST_RUSH, ST_TECH, ST_PREJUMP
+    ST_LAUNCH, ST_DOWN, ST_GETUP, ST_THROWING, ST_THROWN, ST_KO, ST_WIN, ST_STAGGER, ST_LAND, ST_PARRY, ST_RUSH, ST_TECH, ST_PREJUMP, ST_PARRY_END
 };
 
 struct Trail {
@@ -119,6 +121,7 @@ struct Fighter {
     float drive = 6.0f;
     int driveWait = 0, burnout = 0;
     bool heatAvailable = true, tornadoUsed = false;
+    int heatDuration = 600;
     int heatFrames = 0, recoverable = 0, armorHits = 0;
     int rushBonus = 0, rushReady = 0, perfectScale = 0;
     int parryPerfect = 0, throwInvul = 0, techWindow = 0;
@@ -199,7 +202,7 @@ struct Game {
     bool paused = false;
     bool reducedMotion = false;
     int movePage = 0;
-    int pauseTab = 0; // 0 resume menu, 1 controls, 2 moves
+    int pauseTab = 0; // 0 match menu, 1 controls, 2 moves, 3 systems
     int menuSelection = 0;
     char banner[48] = ""; int bannerT = 0;
     float camAngle = -PI * 0.5f, camDist = 7.0f;
