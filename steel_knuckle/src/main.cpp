@@ -73,6 +73,7 @@ Input ReadHuman(int p) {
         in.lk |= P::PadDown(p, SDL_GAMEPAD_BUTTON_SOUTH); in.lkP |= P::PadPressed(p, SDL_GAMEPAD_BUTTON_SOUTH);
         in.rk |= P::PadDown(p, SDL_GAMEPAD_BUTTON_EAST); in.rkP |= P::PadPressed(p, SDL_GAMEPAD_BUTTON_EAST);
     }
+    else impactHeld[p]=false;
     // Capture chords now so releasing a button during hitstop cannot lose them.
     in.throwP |= (in.lpP && in.lk) || (in.lkP && in.lp);
     in.rageP |= (in.lpP && in.rp) || (in.rpP && in.lp);
@@ -134,7 +135,7 @@ int main(int argc, char **argv) {
     if(shotFrame>=0 && preview==7){G.mode=3;ResetTraining();G.bannerT=0;
         G.f[0].pos.x=-2;G.f[1].pos.x=2;G.f[0].heatAvailable=false;G.f[0].heatFrames=500;
         G.f[0].drive=3.5f;G.f[1].burnout=360;G.f[1].drive=0;
-        G.projectiles.push_back({{-1.3f,0.88f,0},{9,0,0},0,0,100,true});}
+        G.projectiles.push_back({{-1.3f,PROJECTILE_HEIGHT,0},{9,0,0},0,0,100,true});}
     double prev = P::Time();
     float acc = 0;
     bool running = true;
