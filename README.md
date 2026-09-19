@@ -4,10 +4,10 @@
 
 **Own the moment.**
 
-A 3D fighting game written from scratch in C++17 — SDL3 for window, input and audio,
-[Diligent Engine](https://github.com/DiligentGraphics/DiligentCore) for rendering on OpenGL or
-Vulkan. Arena footwork and limb strings meet motion-command specials, a six-stock Drive gauge and
-a Heat timer. All move data and tuning are original.
+A 3D fighting game written from scratch in C++17. SDL3 handles the window, input and audio;
+[Diligent Engine](https://github.com/DiligentGraphics/DiligentCore) renders it on OpenGL or
+Vulkan. Sidesteps and limb strings on one side, motion-command specials and a six-stock Drive
+gauge on the other. Every move and every number in it is original.
 
 <img src="docs/title.jpg" alt="Steel Knuckle title screen — The Nocturne Court" width="860">
 
@@ -25,31 +25,34 @@ a Heat timer. All move data and tuning are original.
 
 ---
 
-## What it is
+## The game
 
-Two fighters, one moonlit court, best of three at sixty seconds a round. You move on a 3D plane —
-sidesteps carry you into the background and foreground, and projectiles travel on a fixed line, so
-stepping off that line is a real answer. On top of that sits a motion-command layer: quarter
-circles, dragon punches, Overdrive versions, and two meters that reward spending over hoarding.
+Two fighters, one moonlit court. Best of three, sixty seconds a round.
 
-Four modes from the title screen: **Arcade** (best of three against the CPU), **Local Versus**,
-**Exhibition**, and **Training** with a live move-analysis readout. CPU difficulty runs up to
-Challenger.
+Movement is 3D. Sidesteps carry you into the background and foreground, and projectiles travel a
+fixed line, so stepping off that line beats one outright. Over the top of that footwork sits a
+motion-command layer: quarter circles, dragon punches, Overdrive versions, and two meters built to
+punish hoarding.
+
+Four modes on the title screen. Arcade runs a best-of-three against the CPU at one of three
+difficulties, Rookie through Veteran. Local Versus and Exhibition cover two players and free play.
+Training adds a move-analysis panel: startup, active and recovery frames for whatever you just
+pressed, whether it hit, got blocked or got parried, and the frame advantage you kept.
 
 ## Screenshots
 
 <table>
 <tr>
 <td width="50%"><img src="docs/fight.jpg" alt="Neutral in the Nocturne Court"><br>
-<sub><b>Neutral.</b> Health, round pips, Rage meters, side-on tracking camera.</sub></td>
+<sub>Neutral: health, round pips, Rage meters, side-on tracking camera.</sub></td>
 <td width="50%"><img src="docs/training.jpg" alt="Training mode with the move analysis panel"><br>
-<sub><b>Training.</b> Move analysis, dummy states on F5, hitboxes on F6.</sub></td>
+<sub>Training, with dummy states on F5 and hitboxes on F6.</sub></td>
 </tr>
 <tr>
 <td><img src="docs/fight-manual.png" alt="In-game fight manual, Systems page"><br>
-<sub><b>Fight manual.</b> Controls, move list and systems, paged with Tab.</sub></td>
+<sub>The fight manual: controls, move list, systems. Tab pages through it.</sub></td>
 <td><img src="docs/results.jpg" alt="Victory screen"><br>
-<sub><b>Results.</b> Rematch on Enter, back to the title on Backspace.</sub></td>
+<sub>Match over. Enter rematches, Backspace returns to the title.</sub></td>
 </tr>
 </table>
 
@@ -58,22 +61,21 @@ Challenger.
 | System | Cost | What it does |
 |---|---|---|
 | **Specials** | — | `236`+punch Palm Wave, `623`+punch Rising Fang, `214`+kick Cyclone Kick. A shortcut button fires the neutral, down or back version without the motion. |
-| **Overdrive** | 2 Drive | Hold an attack button with the shortcut, or use both punches / both kicks, to upgrade a special. |
-| **Drive Impact** | 1 Drive | Absorbs two strikes through startup and active frames. A third strike or a throw beats it. |
-| **Drive Parry** | Hold | Stops highs, mids, lows and projectiles; throws beat it. The first two frames are a Perfect Parry. 16 frames of recovery on release. |
-| **Drive Rush** | 1 raw / 3 cancel | Closes distance; the next cancelable normal gains four frames of hitstun and blockstun. |
-| **Drive Reversal** | 2 Drive | Escapes blockstun with strike-invulnerable startup, then a vulnerable gap. |
-| **Burnout** | — | Spending the last stock locks Drive for ten seconds, extends blockstun and allows lethal special chip. |
-| **Heat** | Once a round | Heat Burst starts a ten-second timer; Power Straight on a grounded opponent starts a fifteen-second Engager. Heat chip becomes recoverable grey health. |
-| **Rage Art** | Low health | Charged finisher, cancelable into from a connecting special. |
+| **Overdrive** | 2 Drive | Hold an attack button with the shortcut, or use both punches or both kicks, to upgrade a special. |
+| **Drive Impact** | 1 Drive | Eats two strikes through startup and active frames. A third strike or a throw beats it. |
+| **Drive Parry** | Hold | Stops highs, mids, lows and projectiles. Throws beat it. The first two frames are a Perfect Parry; releasing costs 16 frames of recovery. |
+| **Drive Rush** | 1 raw / 3 cancel | Closes distance. The next cancelable normal gains four frames of hitstun and blockstun. |
+| **Drive Reversal** | 2 Drive | Escapes blockstun with strike-invulnerable startup, then leaves a vulnerable gap. |
+| **Burnout** | — | Spend the last stock and Drive locks out for ten seconds, blockstun stretches, and special chip can kill. |
+| **Heat** | Once a round | Heat Burst starts a ten-second timer. Power Straight on a grounded opponent starts a fifteen-second Engager. Heat chip comes back as recoverable grey health. |
+| **Rage Art** | Low health | Charged finisher. A connecting special cancels into it. |
 
-Juggles run on damage scaling and rising gravity, so launchers cannot keep an opponent airborne
+Juggles run on damage scaling and rising gravity, so no launcher keeps an opponent airborne
 forever. Back plus left kick is Tornado Heel, worth one extension per airborne combo. Tap
-down-forward to low-parry; press punch or sidestep just before landing to tech.
+down-forward to low-parry. Press punch or sidestep just before landing to tech.
 
-Cancel windows, frame counts and the rest are in
-[`steel_knuckle/COMBAT.md`](steel_knuckle/COMBAT.md) — and in the pause menu, which carries the
-same manual in-game.
+Cancel windows and frame counts live in [`steel_knuckle/COMBAT.md`](steel_knuckle/COMBAT.md). The
+pause menu carries the same manual in-game.
 
 ## Controls
 
@@ -91,26 +93,26 @@ same manual in-game.
 | Drive Rush | `B` or double forward | Numpad `.` or double forward | LT + forward, forward |
 | Pause / manual | `Esc` or `P` | `Esc` or `P` | Start |
 
-Directions are relative to the opponent. Motion notation is numpad: `2` down, `3` down-forward,
-`6` forward, `1` down-back, `4` back. A command must finish inside 22 simulation frames, with the
-attack within six frames of the last direction.
+Directions face the opponent. Motion notation is numpad: `2` down, `3` down-forward, `6` forward,
+`1` down-back, `4` back. A command has 22 simulation frames to finish, and the attack has to land
+within six frames of the last direction.
 
-Function keys, any time: `F1` mode · `F2` difficulty · `F3` post-processing · `F4` quality ·
-`F7` reduced motion. In training: `F5` dummy state · `F6` hitboxes · `R` reset.
+Function keys work any time: `F1` mode, `F2` difficulty, `F3` post-processing, `F4` quality,
+`F7` reduced motion. Training adds `F5` for the dummy state, `F6` for hitboxes and `R` to reset.
 
 ## Build
 
 ### Prerequisites
 
-Two SDKs are too large to vendor here. Put them under `third_party/` before configuring:
+Two SDKs are too big to vendor here. Drop them under `third_party/` before configuring:
 
 | Dependency | Where it goes | Notes |
 |---|---|---|
-| [DiligentCore](https://github.com/DiligentGraphics/DiligentCore) | `third_party/DiligentCore` | Clone with submodules; CMake builds it from source. The Direct3D backends are off, since this toolchain is MinGW. |
-| [SDL3 MinGW devel package](https://github.com/libsdl-org/SDL/releases) | `third_party/SDL3-3.4.16` | CMake expects `x86_64-w64-mingw32/include/SDL3/SDL.h` under it. |
+| [DiligentCore](https://github.com/DiligentGraphics/DiligentCore) | `third_party/DiligentCore` | Clone it with submodules; CMake builds it from source. The Direct3D backends are switched off, because this toolchain is MinGW. |
+| [SDL3 MinGW devel package](https://github.com/libsdl-org/SDL/releases) | `third_party/SDL3-3.4.16` | CMake looks for `x86_64-w64-mingw32/include/SDL3/SDL.h` under it. |
 
-Also: CMake 3.19 or newer and a MinGW-w64 GCC toolchain. Keeping the SDKs elsewhere is fine —
-pass `-DTHIRD_PARTY=/path/to/sdks`. `ufbx` and `stb_image` are already in the tree.
+You also need CMake 3.19 or newer and a MinGW-w64 GCC toolchain. Keep the SDKs somewhere else if
+you like and pass `-DTHIRD_PARTY=/path/to/sdks`. `ufbx` and `stb_image` are already in the tree.
 
 ### Configure and build
 
@@ -119,10 +121,9 @@ cmake -S steel_knuckle -B build/game -G "MinGW Makefiles"
 cmake --build build/game --target steel_knuckle -j 4
 ```
 
-`SDL3.dll` and an `assets/` folder are copied next to the executable as part of the build, so the
-game runs from any working directory. Release builds compile at `-O1`: GCC 9 and newer miscompile
-parts of Diligent at `-O2` and above, and the engine's own build drops to `-O1` for the same
-reason.
+`SDL3.dll` and an `assets/` folder get copied next to the executable during the build, so the game
+runs from any working directory. Release builds compile at `-O1`. GCC 9 and newer miscompile parts
+of Diligent at `-O2` and above; the engine's own build drops to `-O1` for the same reason.
 
 ### Run
 
@@ -147,8 +148,8 @@ build/game/steel_knuckle.exe
 powershell -File steel_knuckle/tests/check.ps1
 ```
 
-The harness reuses the compiler and include flags from `build/game`, so configure the game once
-first. It builds `build/combat_tests.exe` against `game.cpp` and runs the simulation suite —
+The harness borrows the compiler and include flags out of `build/game`, so configure the game
+once first. It compiles `build/combat_tests.exe` against `game.cpp` and runs the simulation suite:
 frame data, cancel windows, Drive and Heat accounting, juggle scaling. Add `-BuildGame` to build
 the game afterwards.
 
@@ -165,7 +166,7 @@ steel_knuckle/
     meshgen.cpp     procedural meshes
     ui.cpp          HUD, title screen, pause manual, training readout
     font.cpp        bitmap text
-    audio.cpp       synthesized SFX — 22 kHz, 12 voices, no audio files
+    audio.cpp       synthesized SFX, 22 kHz, 12 voices
     platform.cpp    SDL3 window, input, timing
     shaders.h       shader sources compiled at startup
   tests/            combat simulation suite and check.ps1
@@ -179,17 +180,16 @@ third_party/
 
 ## Notes
 
-- **Rendering.** One Diligent device, two possible backends. OpenGL is the default because it
-  builds and runs anywhere the MinGW toolchain does; Vulkan is a flag away.
-- **Characters.** Models load through `ufbx`, textures through `stb_image`; skinning and pose
-  blending run on the CPU in `character.cpp`.
-- **Audio.** Every sound is generated at startup — impacts, whiffs, UI clicks. No audio files ship
-  with the game.
-- **Determinism.** The simulation runs on fixed frames, which is what makes the test suite and the
-  `--shot` capture fixtures possible.
+- OpenGL is the default backend because it builds anywhere the MinGW toolchain does. Vulkan is one
+  flag away.
+- Models load through `ufbx` and textures through `stb_image`. Skinning and pose blending run on
+  the CPU in `character.cpp`.
+- No audio files ship with the game. Impacts, whiffs and menu clicks are synthesized at startup.
+- The simulation runs on fixed frames. That is what makes both the test suite and the `--shot`
+  capture fixtures repeatable.
 
 ## References
 
 System design drew on [Bandai Namco's Tekken 8 guide](https://en.bandainamcoent.eu/tekken/news/tekken-8-the-guide-start-playing)
 and [Capcom's Street Fighter 6 introduction](https://news.capcomusa.com/2022/06/02/street-fighter-6-redefines-the-genre-in-2023/).
-Nothing here reproduces either game's frame data.
+No frame data is copied from either.
